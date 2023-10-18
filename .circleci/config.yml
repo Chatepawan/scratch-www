@@ -119,21 +119,21 @@ jobs:
 workflows:
   build-test-deploy:
     jobs:
-      - build-and-deploy-staging:
-          context:
-            - scratch-www-all
-            - scratch-www-staging
-            - dockerhub-credentials
-          filters:
-            branches:
-              only:
-                - develop
-                - beta
-                - /^hotfix\/.*/
-                - /^release\/.*/
+  #     - build-and-deploy-staging:
+  #         context:
+  #           - scratch-www-all
+  #           - scratch-www-staging
+  #           - dockerhub-credentials
+  #         filters:
+  #           branches:
+  #             only:
+  #               - develop
+  #               - beta
+  #               - /^hotfix\/.*/
+  #               - /^release\/.*/
       - integration-tests:
-          requires:
-            - build-and-deploy-staging
+  #        requires:
+  #           - build-and-deploy-staging
           context:
             - scratch-www-all
             - scratch-www-staging
@@ -141,57 +141,58 @@ workflows:
           filters:
             branches:
               only:
+                - improve-tests
                 - develop
                 - beta
                 - /^hotfix\/.*/
                 - /^release\/.*/
-      - build-and-deploy-production:
-          context:
-            - scratch-www-all
-            - scratch-www-production
-            - dockerhub-credentials
-          filters:
-            branches:
-              only:
-                - master
-      - integration-tests:
-          requires:
-            - build-and-deploy-production
-          context:
-            - scratch-www-all
-            - scratch-www-production
-            - dockerhub-credentials
-          filters:
-            branches:
-              only:
-                - master
-  Update-translations:
-    triggers:
-      - schedule: # every evening at 7pm EST (8pm EDT, Midnight UTC)
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only: develop
-    jobs:
-      - update-translations:
-          context:
-            - scratch-www-all
-            - scratch-www-staging
-            - dockerhub-credentials
-          filters:
-            branches:
-              only:
-                - develop
-  build-test-no-deploy:
-    jobs:
-      - build-no-deploy:
-          context:
-            - dockerhub-credentials
-          filters:
-            branches:
-              ignore:
-                - develop
-                - master
-                - beta
-                - /^hotfix\/.*/
-                - /^release\/.*/
+  #     - build-and-deploy-production:
+  #         context:
+  #           - scratch-www-all
+  #           - scratch-www-production
+  #           - dockerhub-credentials
+  #         filters:
+  #           branches:
+  #             only:
+  #               - master
+  #     - integration-tests:
+  #         requires:
+  #           - build-and-deploy-production
+  #         context:
+  #           - scratch-www-all
+  #           - scratch-www-production
+  #           - dockerhub-credentials
+  #         filters:
+  #           branches:
+  #             only:
+  #               - master
+  # Update-translations:
+  #   triggers:
+  #     - schedule: # every evening at 7pm EST (8pm EDT, Midnight UTC)
+  #         cron: "0 0 * * *"
+  #         filters:
+  #           branches:
+  #             only: develop
+  #   jobs:
+  #     - update-translations:
+  #         context:
+  #           - scratch-www-all
+  #           - scratch-www-staging
+  #           - dockerhub-credentials
+  #         filters:
+  #           branches:
+  #             only:
+  #               - develop
+  # build-test-no-deploy:
+  #   jobs:
+  #     - build-no-deploy:
+  #         context:
+  #           - dockerhub-credentials
+  #         filters:
+  #           branches:
+  #             ignore:
+  #               - develop
+  #               - master
+  #               - beta
+  #               - /^hotfix\/.*/
+  #               - /^release\/.*/
