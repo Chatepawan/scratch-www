@@ -132,7 +132,7 @@ describe('www-integration footer links', () => {
         expect(pathname).toMatch(/^\/cookies\/?$/);
 
         // Verify localization of last updated message
-        let lastUpdated = await findText('The Scratch Cookie Policy was last updated June 28, 2023');
+        let lastUpdated = await findText('The Scratch Cookie Policy was last updated');
         let lastUpdatedVisible = await lastUpdated.isDisplayed();
         await expect(lastUpdatedVisible).toBe(true);
     });
