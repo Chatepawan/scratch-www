@@ -151,38 +151,38 @@ class SeleniumHelper {
      * @param {string} timeoutMessage The message to use if the operation times out.
      * @returns {Promise<webdriver.WebElement>} A promise that resolves to the element.
      */
-    findByXpath (xpath, timeoutMessage = `findByXpath timed out for path: ${xpath}`) {
-        return this.driver.wait(until.elementLocated(By.xpath(xpath)), DEFAULT_TIMEOUT_MILLISECONDS, timeoutMessage)
-            .then(el => (
-                this.driver.wait(el.isDisplayed(), DEFAULT_TIMEOUT_MILLISECONDS, `${xpath} is not visible`)
-                    .then(() => el)
-            ));
+    async findByXpath (xpath, timeoutMessage = `findByXpath timed out for path: ${xpath}`) {
+        const el = await this.driver.wait(
+            until.elementLocated(By.xpath(xpath)), DEFAULT_TIMEOUT_MILLISECONDS, timeoutMessage);
+        await this.driver.wait(el.isDisplayed(), DEFAULT_TIMEOUT_MILLISECONDS, `${xpath} is not visible`);
+        return el;
     }
 
     /**
      * @param {webdriver.WebElement} element Wait until this element is gone (stale).
      * @returns {Promise} A promise that resolves when the element is gone.
      */
-    waitUntilGone (element) {
-        return this.driver.wait(until.stalenessOf(element));
+    async waitUntilGone (element) {
+        await this.driver.wait(until.stalenessOf(element));
     }
 
     /**
      * Wait until an element can be found by the provided xpath, then click on it.
      * @param {string} xpath The xpath to click.
-     * @returns {Promise<void>} A promise that resolves when the element is clicked.
+     * @returns {Promise} A promise that resolves when the element is clicked.
      */
-    clickXpath (xpath) {
-        return this.findByXpath(xpath).then(el => el.click());
+    async clickXpath (xpath) {
+        const el = await this.findByXpath(xpath);
+        await el.click();
     }
 
     /**
      * Wait until an element can be found by the provided text, then click on it.
      * @param {string} text The text to click.
-     * @returns {Promise<void>} A promise that resolves when the element is clicked.
+     * @returns {Promise} A promise that resolves when the element is clicked.
      */
-    clickText (text) {
-        return this.clickXpath(`//*[contains(text(), '${text}')]`);
+    async clickText (text) {
+        await this.clickXpath(`//*[contains(text(), '${text}')]`);
     }
 
     /**
@@ -190,8 +190,8 @@ class SeleniumHelper {
      * @param {string} text The text to find.
      * @returns {Promise<webdriver.WebElement>} The element containing the text.
      */
-    findText (text) {
-        return this.driver.wait(until.elementLocated(By.xpath(`//*[contains(text(), '${text}')]`), 5 * 1000));
+    async findText (text) {
+        return await this.driver.wait(until.elementLocated(By.xpath(`//*[contains(text(), '${text}')]`), 5 * 1000));
     }
 
     /**
@@ -199,8 +199,8 @@ class SeleniumHelper {
      * @param {string} text The button text to find and click.
      * @returns {Promise} A promise that resolves when the button is clicked.
      */
-    clickButton (text) {
-        return this.clickXpath(`//button[contains(text(), '${text}')]`);
+    async clickButton (text) {
+        await this.clickXpath(`//button[contains(text(), '${text}')]`);
     }
 
     /**
@@ -208,8 +208,8 @@ class SeleniumHelper {
      * @param {string} css The CSS selector to find.
      * @returns {Promise<webdriver.WebElement>} The element matching the CSS selector.
      */
-    findByCss (css) {
-        return this.driver.wait(until.elementLocated(By.css(css), 1000 * 5));
+    async findByCss (css) {
+        return await this.driver.wait(until.elementLocated(By.css(css), 1000 * 5));
     }
 
     /**
@@ -217,8 +217,9 @@ class SeleniumHelper {
      * @param {string} css The CSS selector to find and click.
      * @returns {Promise} A promise that resolves when the element is clicked.
      */
-    clickCss (css) {
-        return this.findByCss(css).then(el => el.click());
+    async clickCss (css) {
+        const el = await this.findByCss(css);
+        await el.click();
     }
 
     /**
@@ -227,14 +228,12 @@ class SeleniumHelper {
      * @param {string} endXpath The xpath to drag to.
      * @returns {Promise} A promise that resolves when the drag is complete.
      */
-    dragFromXpathToXpath (startXpath, endXpath) {
-        return this.findByXpath(startXpath).then(startEl => {
-            return this.findByXpath(endXpath).then(endEl => {
-                return this.driver.actions()
-                    .dragAndDrop(startEl, endEl)
-                    .perform();
-            });
-        });
+    async dragFromXpathToXpath (startXpath, endXpath) {
+        const startEl = await this.findByXpath(startXpath);
+        const endEl = await this.findByXpath(endXpath);
+        await this.driver.actions()
+            .dragAndDrop(startEl, endEl)
+            .perform();
     }
 
     /**
@@ -257,37 +256,35 @@ class SeleniumHelper {
      * @param {RegExp} regex The regex to match the url against.
      * @returns {Promise} A promise that resolves when the url matches the regex.
      */
-    urlMatches (regex) {
-        return this.driver.wait(until.urlMatches(regex), 1000 * 5);
+    async urlMatches (regex) {
+        await this.driver.wait(until.urlMatches(regex), 1000 * 5);
     }
 
     /**
      * Get selected browser log entries.
-     * @param {Array<string>} [whitelist] An optional list of log strings to allow. Default: see implementation.
+     * @param {Array<string>} whitelist A list of log strings to allow.
      * @returns {Promise<Array<webdriver.logging.Entry>>} A promise that resolves to the log entries.
      */
-    getLogs (whitelist) {
-        return this.driver.manage()
+    async getLogs (whitelist) {
+        const entries = await this.driver.manage()
             .logs()
-            .get('browser')
-            .then((entries) => {
-                return entries.filter((entry) => {
-                    const message = entry.message;
-                    for (let i = 0; i < whitelist.length; i++) {
-                        if (message.indexOf(whitelist[i]) !== -1) {
-                            // eslint-disable-next-line no-console
-                            // console.warn('Ignoring whitelisted error: ' + whitelist[i]);
-                            return false;
-                        } else if (entry.level !== 'SEVERE') {
-                            // eslint-disable-next-line no-console
-                            // console.warn('Ignoring non-SEVERE entry: ' + message);
-                            return false;
-                        }
-                        return true;
-                    }
-                    return true;
-                });
-            });
+            .get('browser');
+        return entries.filter((entry) => {
+            const message = entry.message;
+            for (const element of whitelist) {
+                if (message.indexOf(element) !== -1) {
+                    // eslint-disable-next-line no-console
+                    // console.warn('Ignoring whitelisted error: ' + whitelist[i]);
+                    return false;
+                } else if (entry.level !== 'SEVERE') { // WARNING: this doesn't do what it looks like it does!
+                    // eslint-disable-next-line no-console
+                    // console.warn('Ignoring non-SEVERE entry: ' + message);
+                    return false;
+                }
+                return true;
+            }
+            return true;
+        });
     }
 
     /**
@@ -299,10 +296,7 @@ class SeleniumHelper {
     async containsClass (element, cl) {
         let classes = await element.getAttribute('class');
         let classList = classes.split(' ');
-        if (classList.includes(cl)){
-            return true;
-        }
-        return false;
+        return classList.includes(cl);
     }
 
     /**
