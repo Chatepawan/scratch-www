@@ -19,6 +19,8 @@ const {By, Key, until} = webdriver;
 // The Jasmine default timeout is 30 seconds so make sure this is lower.
 const DEFAULT_TIMEOUT_MILLISECONDS = 20 * 1000;
 
+const SHOW_PAGE_SOURCE = true;
+
 // This removes confusing `regenerator-runtime` noise from stack traces.
 // This is V8-specific code. Please don't use it in a browser or any production code.
 const oldPrepareStackTrace = Error.prepareStackTrace;
@@ -125,7 +127,7 @@ class SeleniumHelperError extends ChainableError {
         // but that's not an option because of all these async calls.
         const url = await driver.getCurrentUrl();
         const title = await driver.getTitle();
-        // const pageSource = await driver.getPageSource();
+        const pageSource = await driver.getPageSource();
         const browserLogEntries = await driver.manage()
             .logs()
             .get('browser');
@@ -134,8 +136,10 @@ class SeleniumHelperError extends ChainableError {
             `Browser URL: ${url}`,
             `Browser title: ${title}`,
             `Browser logs:\n*****\n${browserLogText}\n*****`
-            // `Browser page source:\n*****\n${pageSource}\n*****`
         ];
+        if (SHOW_PAGE_SOURCE) {
+            this.contextLines.push(`Browser page source:\n*****\n${pageSource}\n*****`);
+        }
     }
 
     chain (innerError) {
